@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050608">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Electrocode — Exe Factory</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+window.tailwind = window.tailwind || {};
+window.tailwind.config = { theme: { extend: { fontFamily: { inter: ["Inter", "sans-serif"] } } } };
+</script>
+<style>
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ width:100%; min-height:100%; margin:0; background:#050608; }
+body{ font-family:Inter,sans-serif; color:#f8fafc; background:#050608; position:relative; -webkit-user-select:none; user-select:none; }
+input, textarea{ -webkit-user-select:text; user-select:text; }
+
+/* ========================================================= AURORA ========================================================= */
+.aurora{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.aurora::before, .aurora::after, .aurora .orb{
+  content:""; position:absolute; border-radius:50%;
+  filter: blur(90px); opacity:.55; will-change:transform;
+}
+.aurora::before{ width:60vmax; height:60vmax; background: radial-gradient(circle, rgba(220,38,38,.4), transparent 65%); top:-20vmax; left:-15vmax; animation: auroraA 38s ease-in-out infinite; }
+.aurora::after{ width:55vmax; height:55vmax; background: radial-gradient(circle, rgba(185,28,28,.28), transparent 65%); bottom:-18vmax; right:-15vmax; animation: auroraB 46s ease-in-out infinite; }
+.aurora .orb{ width:45vmax; height:45vmax; background: radial-gradient(circle, rgba(127,29,29,.22), transparent 70%); top:35%; left:30%; animation: auroraC 52s ease-in-out infinite; }
+@keyframes auroraA{ 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(6vmax,4vmax) scale(1.12); } }
+@keyframes auroraB{ 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(-5vmax,-3vmax) scale(1.15); } }
+@keyframes auroraC{ 0%,100%{ transform: translate(-3vmax,2vmax) scale(1); } 50%{ transform: translate(4vmax,-4vmax) scale(1.08); } }
+.noise{
+  position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+button, input, textarea, select{ font-family:inherit; }
+button{ -webkit-user-select:none; user-select:none; cursor:pointer; }
+.app{ position:relative; z-index:2; width:100%; min-height:100dvh; display:flex; flex-direction:column; }
+.app-inner{
+  width:100%; max-width:680px; margin:auto;
+  padding: max(8px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:8px;
+  flex:1; min-height:0;
+}
+.glass{
+  background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.075);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 18px 50px rgba(0,0,0,.28);
+  backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+}
+.glass-accent{
+  border:1px solid rgba(220,38,38,.25);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(220,38,38,.05), 0 18px 50px rgba(0,0,0,.28), 0 0 40px rgba(220,38,38,.08);
+}
+
+/* ========================================================= HEADER ========================================================= */
+.header{
+  height:44px; min-height:44px;
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:6px; flex:0 0 auto;
+}
+.brand{ display:flex; align-items:center; gap:8px; min-width:0; position:relative; }
+.brand-logo{
+  width:32px; height:32px; flex:0 0 32px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  background: linear-gradient(145deg, rgba(220,38,38,.3), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow: 0 0 25px rgba(220,38,38,.2), inset 0 1px rgba(255,255,255,.08);
+}
+.brand-logo::after{
+  content:""; position:absolute; inset:-50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(220,38,38,.5) 90deg, transparent 180deg, rgba(153,27,27,.5) 270deg, transparent 360deg);
+  animation: logoSpin 12s linear infinite; opacity:.6;
+}
+.brand-logo svg{ position:relative; z-index:2; width:16px; height:16px; color:#fecaca; }
+@keyframes logoSpin{ to{ transform: rotate(360deg); } }
+.brand-name{ font-size:14px; line-height:15px; font-weight:800; letter-spacing:-.4px; }
+.brand-sub{ margin-top:1px; color:#64748b; font-size:5.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
+.header-right{ display:flex; align-items:center; gap:5px; }
+.status-badge{
+  display:flex; align-items:center; gap:5px;
+  height:24px; padding:0 8px; border-radius:7px;
+  background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06);
+  font-size:6px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  color:#64748b; max-width:140px;
+}
+.status-badge .dot{ width:5px; height:5px; border-radius:50%; background:#475569; transition:.3s ease; flex-shrink:0; }
+.status-badge.ready .dot{ background:#22c55e; box-shadow: 0 0 4px #22c55e, 0 0 8px rgba(34,197,94,.6); }
+.status-badge.ready{ color:#86efac; border-color:rgba(34,197,94,.2); }
+.status-badge.loading .dot{ background:#dc2626; box-shadow: 0 0 4px #dc2626, 0 0 8px rgba(220,38,38,.6); animation: badgeBlink .9s infinite alternate; }
+.status-badge.loading{ color:#fecaca; border-color:rgba(220,38,38,.25); }
+.status-badge.success .dot{ background:#22c55e; box-shadow: 0 0 6px #22c55e, 0 0 12px rgba(34,197,94,.8); }
+.status-badge.success{ color:#86efac; border-color:rgba(34,197,94,.3); }
+.status-badge.error .dot{ background:#ef4444; box-shadow: 0 0 6px #ef4444, 0 0 12px rgba(239,68,68,.8); }
+.status-badge.error{ color:#fca5a5; border-color:rgba(239,68,68,.3); }
+@keyframes badgeBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.header-btn{
+  width:42px; height:42px; flex:0 0 42px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  color:#fca5a5; font-size:15px;
+  transition:.2s ease;
+  background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06);
+}
+.header-btn:active{ transform:scale(.94); background:rgba(220,38,38,.13); }
+.save-indicator{
+  position:absolute; top:-2px; left:-2px;
+  width:8px; height:8px; border-radius:50%;
+  background:#22c55e; box-shadow: 0 0 6px #22c55e;
+  opacity:0; transition:.3s ease;
+}
+.save-indicator.show{ opacity:1; }
+
+/* ========================================================= MAIN ========================================================= */
+.main{ flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.card{ border-radius:16px; padding:10px; flex:0 0 auto; }
+
+.section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.section-title{ font-size:7px; text-transform:uppercase; letter-spacing:.17em; color:#64748b; font-weight:800; }
+.section-name{ font-size:13px; font-weight:800; margin-top:1px; color:#e2e8f0; }
+.section-badge{
+  font-size:6px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  padding:3px 8px; border-radius:6px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+  color:#64748b; max-width:140px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.section-badge.accent{ color:#fca5a5; border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.08); }
+
+/* ========================================================= FIELD ROWS ========================================================= */
+.field-wrap{ margin-bottom:8px; }
+.field-label{
+  display:flex; align-items:center; gap:5px;
+  color:#64748b; font-size:7px; line-height:9px;
+  text-transform:uppercase; letter-spacing:.13em; font-weight:800;
+  margin:0 0 5px 2px;
+}
+.field-label .ico{ font-size:10px; }
+
+/* Token row: input + 3 icon buttons */
+.token-row{
+  display:grid;
+  grid-template-columns: minmax(0,1fr) 42px 42px 42px;
+  gap:4px; width:100%;
+}
+.field{
+  width:100%; min-width:0; height:42px; border-radius:11px;
+  background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.08);
+  color:#f8fafc; outline:none; padding:0 12px; font-size:12px;
+  transition:.2s ease; overflow:hidden; text-overflow:ellipsis;
+}
+.field::placeholder{ color:#475569; }
+.field:focus{ border-color:rgba(220,38,38,.65); box-shadow:0 0 0 2px rgba(220,38,38,.1); }
+.field.mono{ font-family:"Courier New",monospace; font-size:11px; letter-spacing:.02em; }
+.field.token-color{ color:#fca5a5; }
+.field:disabled{ opacity:.5; cursor:not-allowed; }
+
+.icon-btn{
+  height:42px; width:42px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06);
+  color:#94a3b8; font-size:15px;
+  transition:.2s ease;
+}
+.icon-btn:active{ transform:scale(.9); background:rgba(255,255,255,.1); }
+.icon-btn.accent{ color:#fca5a5; border-color:rgba(220,38,38,.25); }
+.icon-btn.accent:active{ background:rgba(220,38,38,.15); }
+.icon-btn.danger{ color:#f87171; }
+.icon-btn.danger:active{ background:rgba(239,68,68,.15); }
+
+/* ========================================================= AUTOCOMPLETE REPO ========================================================= */
+.repo-wrap{ position:relative; }
+.repo-input-row{
+  display:grid;
+  grid-template-columns: minmax(0,1fr);
+  gap:4px;
+}
+.repo-dropdown{
+  position:absolute; top:100%; left:0; right:0; z-index:100;
+  margin-top:4px;
+  background:rgba(15,18,25,.98);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(220,38,38,.25);
+  border-radius:12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.7), 0 0 30px rgba(220,38,38,.08);
+  max-height:280px; overflow-y:auto;
+  display:none;
+  animation: dropdownIn .15s ease;
+}
+@keyframes dropdownIn{ from{ opacity:0; transform: translateY(-4px); } to{ opacity:1; transform: translateY(0); } }
+.repo-dropdown.open{ display:block; }
+.repo-dropdown::-webkit-scrollbar{ width:3px; }
+.repo-dropdown::-webkit-scrollbar-thumb{ background:rgba(220,38,38,.3); border-radius:2px; }
+.repo-option{
+  padding:11px 12px;
+  cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:.12s ease;
+  display:flex; align-items:center; gap:8px;
+  min-height:48px;
+}
+.repo-option:last-child{ border-bottom:none; }
+.repo-option:active, .repo-option.active{ background:rgba(220,38,38,.12); }
+.repo-option-name{
+  font-size:12px; font-weight:800; color:#e2e8f0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0;
+  display:flex; align-items:center; gap:6px;
+}
+.repo-option-name svg{ width:13px; height:13px; color:#64748b; flex-shrink:0; }
+.repo-option-name .match-hl{
+  background: rgba(220,38,38,.3);
+  color:#fecaca;
+  border-radius:3px;
+  padding:0 2px;
+}
+.repo-option-badge{
+  font-size:6.5px; font-weight:800;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:5px;
+  padding:2px 6px;
+  color:#94a3b8;
+  letter-spacing:.05em;
+  flex-shrink:0;
+}
+.repo-option-badge.private{
+  background:rgba(251,191,36,.12);
+  border-color:rgba(251,191,36,.2);
+  color:#fbbf24;
+}
+.repo-dropdown-empty{
+  padding:14px;
+  text-align:center;
+  font-size:10px; color:#64748b;
+  font-style:italic;
+}
+
+.hint{
+  font-size:7px; color:#64748b; margin-top:6px;
+  display:flex; align-items:center; gap:4px;
+  flex-wrap:wrap; line-height:1.5;
+}
+.hint code{
+  background:rgba(220,38,38,.1);
+  color:#fca5a5;
+  padding:2px 6px; border-radius:4px;
+  font-family:"Courier New",monospace;
+  font-size:7px; font-weight:800;
+  word-break:break-all;
+}
+
+/* Note d'aide (Token) */
+.note{
+  font-size:7px;
+  color:#94a3b8;
+  background:rgba(220,38,38,.04);
+  border-left:3px solid #dc2626;
+  padding:8px 10px;
+  border-radius:8px;
+  line-height:1.55;
+  margin-top:8px;
+}
+.note a{ color:#fca5a5; text-decoration:none; font-weight:700; word-break:break-word; }
+.note a:active{ text-decoration:underline; }
+.note code{
+  background:rgba(0,0,0,.5);
+  padding:2px 5px; border-radius:4px;
+  font-family:"Courier New",monospace;
+  font-size:7px;
+  color:#fca5a5; font-weight:800;
+  word-break:break-all;
+}
+
+/* User chip */
+.user-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px;
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.3);
+  border-radius:9999px;
+  font-size:7px;
+  color:#86efac;
+  font-weight:800;
+  margin-top:8px;
+  max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
+.user-chip .pulse{
+  width:6px; height:6px; border-radius:50%;
+  background:#22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: softPulse 2s infinite;
+  flex-shrink:0;
+}
+@keyframes softPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.user-chip.error{
+  background:rgba(239,68,68,.08);
+  border-color:rgba(239,68,68,.3);
+  color:#fca5a5;
+}
+.user-chip.error .pulse{ background:#ef4444; box-shadow: 0 0 8px #ef4444; }
+
+/* ========================================================= STEPS ========================================================= */
+.steps{
+  display:flex; flex-direction:column; gap:5px;
+  margin-bottom:8px;
+}
+.step{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 12px;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:11px;
+  font-size:10px;
+  transition:.25s ease;
+  min-height:44px;
+}
+.step.done{
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.04);
+}
+.step.running{
+  border-color: rgba(220,38,38,.4);
+  background: rgba(220,38,38,.05);
+}
+.step.error{
+  border-color: rgba(239,68,68,.4);
+  background: rgba(239,68,68,.05);
+}
+
+.led{
+  width:10px; height:10px; border-radius:50%;
+  background:#334155; flex-shrink:0; position:relative;
+  transition:.3s ease;
+}
+.led[data-state="running"]{
+  background:#dc2626;
+  box-shadow: 0 0 10px #dc2626, 0 0 20px rgba(220,38,38,.4);
+  animation: ledPulse 1.2s ease-in-out infinite;
+}
+.led[data-state="done"]{
+  background:#22c55e;
+  box-shadow: 0 0 10px #22c55e, 0 0 20px rgba(34,197,94,.6);
+}
+.led[data-state="done"]::after{
+  content:''; position:absolute; inset:-4px; border-radius:50%;
+  border:1px solid rgba(34,197,94,.4);
+  animation: ripple 1.5s ease-out infinite;
+}
+.led[data-state="error"]{
+  background:#ef4444;
+  box-shadow: 0 0 10px #ef4444, 0 0 20px rgba(239,68,68,.6);
+}
+@keyframes ledPulse{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.6; transform:scale(1.25); }
+}
+@keyframes ripple{
+  0%{ transform:scale(.8); opacity:1; }
+  100%{ transform:scale(1.6); opacity:0; }
+}
+
+.step-label{
+  flex:1; color:#cbd5e1; font-weight:700;
+  font-size:9px; line-height:1.3; min-width:0;
+}
+.step-label code{
+  background:rgba(220,38,38,.12);
+  color:#fca5a5;
+  padding:1px 5px; border-radius:4px;
+  font-family:"Courier New",monospace;
+  font-size:7.5px; font-weight:800;
+}
+.step.done .step-label{ color:#86efac; }
+.step.error .step-label{ color:#fca5a5; }
+.step-time{
+  font-size:7px; color:#64748b;
+  font-family:"Courier New",monospace;
+  font-weight:800; flex-shrink:0;
+  font-variant-numeric:tabular-nums;
+}
+
+.spinner{
+  display:inline-block; width:9px; height:9px;
+  border:1.5px solid rgba(220,38,38,.3);
+  border-top-color:#dc2626;
+  border-radius:50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align:middle;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* ========================================================= BUTTONS ========================================================= */
+.btn{
+  height:46px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  font-weight:800; font-size:10px; letter-spacing:.06em;
+  text-transform:uppercase; transition:.15s ease;
+  border:1px solid transparent;
+  white-space:nowrap; overflow:hidden;
+  width:100%;
+}
+.btn:active{ transform:scale(.97); }
+.btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+.btn-primary{
+  color:white;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  border-color: rgba(248,113,113,.4);
+  box-shadow: 0 10px 28px rgba(220,38,38,.35), inset 0 1px 0 rgba(255,255,255,.15);
+  height:52px;
+  font-size:11px;
+  margin-top:8px;
+}
+.btn-primary:active:not(:disabled){ box-shadow: 0 6px 18px rgba(220,38,38,.35); }
+
+.btn-success{
+  color:white;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-color: rgba(74,222,128,.4);
+  box-shadow: 0 10px 28px rgba(34,197,94,.3), inset 0 1px 0 rgba(255,255,255,.15);
+  height:52px;
+  font-size:11px;
+  margin-top:6px;
+}
+
+.btn-danger{
+  color:#fca5a5;
+  background:rgba(239,68,68,.1);
+  border-color: rgba(239,68,68,.3);
+}
+.btn-danger:active{ background:rgba(239,68,68,.2); }
+
+/* ========================================================= LOG TERMINAL ========================================================= */
+.log{
+  margin-top:8px;
+  padding:8px 10px;
+  background:rgba(0,0,0,.42);
+  border:1px solid rgba(220,38,38,.15);
+  border-radius:12px;
+  font-family:"Courier New",monospace;
+  font-size:9px;
+  line-height:1.5;
+  color:#94a3b8;
+  max-height:32vh;
+  overflow-y:auto;
+  display:none;
+  -webkit-overflow-scrolling: touch;
+  word-break:break-word;
+}
+.log.show{ display:block; }
+.log::-webkit-scrollbar{ width:4px; }
+.log::-webkit-scrollbar-thumb{ background:rgba(220,38,38,.3); border-radius:2px; }
+.log .line{ display:flex; gap:6px; margin-bottom:1px; }
+.log .ts{ color:#475569; flex-shrink:0; min-width:52px; font-size:8px; }
+.log .msg{ flex:1; word-break:break-word; font-size:9px; }
+.log .ok{ color:#4ade80; }
+.log .err{ color:#f87171; }
+.log .info{ color:#fca5a5; }
+.log .warn{ color:#fbbf24; }
+.log a{ color:#fca5a5; }
+
+/* ========================================================= SUCCESS PANEL ========================================================= */
+.success-panel{
+  display:none;
+  background:linear-gradient(135deg, rgba(34,197,94,.08), rgba(220,38,38,.05));
+  border:1px solid rgba(34,197,94,.35);
+  border-radius:14px;
+  padding:16px 14px;
+  margin-top:10px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.success-panel::before{
+  content:''; position:absolute; top:-50%; left:-50%;
+  width:200%; height:200%;
+  background:conic-gradient(from 0deg, transparent, rgba(34,197,94,.08), transparent 30%);
+  animation: rotate 12s linear infinite;
+  z-index:0;
+}
+@keyframes rotate{ to{ transform: rotate(360deg); } }
+.success-panel > *{ position:relative; z-index:1; }
+.success-panel.show{ display:block; animation: slideIn .5s cubic-bezier(.34,1.56,.64,1); }
+@keyframes slideIn{
+  from{ opacity:0; transform: translateY(20px) scale(.95); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+.success-panel .check{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:48px; height:48px; border-radius:50%;
+  background:rgba(34,197,94,.15);
+  border:2px solid #22c55e;
+  margin-bottom:8px;
+  box-shadow: 0 0 20px rgba(34,197,94,.4);
+}
+.success-panel .check svg{ width:22px; height:22px; color:#22c55e; }
+.success-panel h3{
+  color:#86efac;
+  font-size:13px;
+  margin-bottom:4px;
+  font-weight:800;
+}
+.success-panel p{
+  color:#94a3b8;
+  font-size:9px;
+  margin-bottom:12px;
+  line-height:1.5;
+  word-break:break-word;
+}
+
+.download-link{
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:14px 16px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color:#ffffff;
+  border-radius:12px;
+  font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  text-decoration:none;
+  box-shadow: 0 8px 24px -8px rgba(34,197,94,.6), 0 0 0 1px rgba(34,197,94,.4);
+  transition:.18s cubic-bezier(.34,1.56,.64,1);
+  width:100%; min-height:50px;
+}
+.download-link:active{ transform:scale(.97); }
+.download-link svg{ width:18px; height:18px; flex-shrink:0; }
+
+.success-panel .alt-links{
+  margin-top:10px;
+  font-size:8px;
+  color:#64748b;
+}
+.success-panel .alt-links a{
+  color:#94a3b8;
+  text-decoration:none;
+  border-bottom:1px dotted #64748b;
+}
+.success-panel .alt-links a:active{ color:#fca5a5; border-color:#fca5a5; }
+
+.info-help{
+  margin-top:10px;
+  font-size:8px;
+  color:#64748b;
+  line-height:1.5;
+  word-break:break-word;
+}
+.info-help code{
+  color:#fca5a5;
+  background:rgba(220,38,38,.1);
+  padding:2px 5px; border-radius:4px;
+  font-size:7.5px;
+  font-family:"Courier New",monospace;
+  font-weight:800;
+}
+
+/* ========================================================= SHEET ========================================================= */
+.sheet-overlay{
+  position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  opacity:0; pointer-events:none; transition:.25s ease;
+}
+.sheet-overlay.open{ opacity:1; pointer-events:auto; }
+.sheet{
+  position:fixed; left:0; right:0; bottom:0; z-index:10001;
+  max-height:82dvh; min-height:40dvh;
+  background: linear-gradient(180deg, rgba(15,18,25,.98), rgba(10,12,18,.99));
+  border-top:1px solid rgba(255,255,255,.1);
+  border-radius:22px 22px 0 0;
+  box-shadow: 0 -20px 60px rgba(0,0,0,.7);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.sheet.open{ transform: translateY(0); }
+.sheet-handle{
+  width:44px; height:4px; border-radius:2px;
+  background:rgba(255,255,255,.2);
+  margin:10px auto 6px auto; flex:0 0 auto;
+}
+.sheet-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:4px 18px 12px 18px; flex:0 0 auto;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.sheet-head-left{ display:flex; align-items:center; gap:12px; }
+.sheet-icon{
+  width:42px; height:42px; border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.25);
+  font-size:18px;
+}
+.sheet-title{ font-size:13px; font-weight:800; color:#fecaca; }
+.sheet-sub{ font-size:7px; text-transform:uppercase; letter-spacing:.16em; color:#991b1b; font-weight:700; margin-bottom:2px; }
+.sheet-close{
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+  color:#94a3b8; font-size:18px;
+  display:flex; align-items:center; justify-content:center;
+}
+.sheet-close:active{ background:rgba(255,255,255,.1); color:#f8fafc; }
+.sheet-body{
+  flex:1; min-height:0; overflow-y:auto;
+  padding:14px 18px 18px 18px;
+}
+.info-list{ display:flex; flex-direction:column; gap:10px; }
+.info-item{
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; border-radius:13px;
+  background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.05);
+}
+.info-item-icon{
+  flex:0 0 36px; width:36px; height:36px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.2);
+  font-size:16px;
+}
+.info-item-body{ min-width:0; flex:1; }
+.info-item-title{ font-size:10px; font-weight:800; color:#e2e8f0; margin-bottom:3px; }
+.info-item-desc{ font-size:8.5px; color:#94a3b8; line-height:1.55; }
+.info-footer{
+  margin-top:16px; text-align:center;
+  font-size:7px; color:#475569; letter-spacing:.14em; text-transform:uppercase;
+}
+
+/* ========================================================= TOAST ========================================================= */
+.toast-container{
+  position:fixed; z-index:99999;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  left:12px; right:12px;
+  display:flex; flex-direction:column; gap:8px;
+  pointer-events:none;
+  max-width:660px; margin:0 auto;
+}
+.internal-toast{
+  pointer-events:auto;
+  padding:12px 14px; border-radius:12px;
+  background:rgba(15,23,42,.96);
+  border:1px solid rgba(220,38,38,.25);
+  border-left:4px solid #dc2626;
+  color:#e2e8f0; font-size:10px; font-weight:700;
+  box-shadow: 0 15px 40px rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:space-between;
+  backdrop-filter:blur(18px);
+  animation: toastSlide .25s cubic-bezier(.175,.885,.32,1.275);
+}
+.internal-toast.success-toast{ border-left-color:#4ade80; border-color:rgba(74,222,128,.25); }
+.internal-toast.danger-toast{ border-left-color:#f87171; border-color:rgba(248,113,113,.25); }
+.internal-toast.warning-toast{ border-left-color:#fcd34d; border-color:rgba(250,204,21,.25); }
+@keyframes toastSlide{
+  from{ opacity:0; transform: translateY(20px) scale(.95); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* ========================================================= FOOTER ========================================================= */
+.footer{
+  height:14px; min-height:14px; display:flex; align-items:center; justify-content:center;
+  color:#334155; font-size:6px; letter-spacing:.14em; text-transform:uppercase;
+  margin-top:4px; flex:0 0 auto;
+  gap:6px;
+}
+.footer .dot{
+  display:inline-block; width:5px; height:5px;
+  border-radius:50%; background:#22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+/* ========================================================= RESPONSIVE ========================================================= */
+@media (max-height:700px){
+  .header{ height:40px; min-height:40px; margin-bottom:4px; }
+  .brand-logo{ width:28px; height:28px; flex-basis:28px; }
+  .brand-name{ font-size:12px; }
+  .header-btn{ width:38px; height:38px; flex-basis:38px; font-size:13px; }
+  .field, .icon-btn{ height:38px; font-size:11px; }
+  .icon-btn{ width:38px; }
+  .btn-primary, .btn-success{ height:46px; font-size:10px; }
+  .log{ font-size:8px; max-height:26vh; }
+  .footer{ display:none; }
+  .status-badge{ max-width:100px; }
+}
+@media (max-width:380px){
+  .token-row{ grid-template-columns: minmax(0,1fr) 38px 38px 38px; }
+  .icon-btn{ width:38px; height:38px; }
+  .btn{ font-size:9px; }
+}
+@media (min-width:600px){
+  .app-inner{ max-width:720px; }
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon.png">
+</head>
+<body>
+
+<div class="aurora"><div class="orb"></div></div>
+<div class="noise"></div>
+
+<div class="app">
+  <div class="app-inner">
+    <!-- ============================================================ HEADER ============================================================ -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="brand-name">Electrocode</div>
+          <div class="brand-sub">Exe Factory</div>
+        </div>
+        <div id="saveIndicator" class="save-indicator"></div>
+      </div>
+      <div class="header-right">
+        <div id="statusBadge" class="status-badge">
+          <span class="dot"></span>
+          <span id="statusBadgeText">PRÊT</span>
+        </div>
+        <button class="header-btn" onclick="openSheet('info')" aria-label="Info">ⓘ</button>
+      </div>
+    </header>
+
+    <!-- ============================================================ MAIN ============================================================ -->
+    <main class="main">
+
+      <!-- CARD: TOKEN -->
+      <section class="card glass glass-accent">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Connexion</div>
+            <div class="section-name">Token GitHub</div>
+          </div>
+          <div class="section-badge">SECURE</div>
+        </div>
+
+        <div class="field-wrap" style="margin-bottom:0;">
+          <div class="token-row">
+            <input id="token" class="field mono token-color" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+            <button class="icon-btn" onclick="toggleTokenView(this)" title="Voir/Cacher" aria-label="Voir/Cacher">👁</button>
+            <button class="icon-btn accent" onclick="pasteToken()" title="Coller" aria-label="Coller">📋</button>
+            <button class="icon-btn danger" onclick="clearToken()" title="Effacer" aria-label="Effacer">✕</button>
+          </div>
+        </div>
+
+        <div id="userChip" class="user-chip" style="display:none;">
+          <span class="pulse"></span>
+          <span>Connecté : <strong id="userName">—</strong></span>
+        </div>
+
+        <div class="note">
+          Crée un token sur <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=Electrocode" target="_blank" rel="noopener">github.com/settings/tokens/new</a>
+          avec les scopes <code>repo</code> et <code>workflow</code>.
+        </div>
+      </section>
+
+      <!-- CARD: REPO -->
+      <section class="card glass">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Configuration</div>
+            <div class="section-name">Dépôt GitHub</div>
+          </div>
+          <div class="section-badge" id="repoBadge">AUCUN</div>
+        </div>
+
+        <div class="field-wrap" style="margin-bottom:0;">
+          <label class="field-label"><span class="ico">📦</span> Dépôt cible</label>
+          <div class="repo-wrap">
+            <div class="repo-input-row">
+              <input id="repo" class="field mono" type="text" placeholder="Colle ton token pour charger tes dépôts…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off" disabled>
+            </div>
+            <div class="repo-dropdown" id="autocompleteList"></div>
+          </div>
+        </div>
+
+        <div class="hint">
+          💡 Sous-dossier : <code id="subfolderHint">—</code>
+        </div>
+      </section>
+
+      <!-- CARD: PROGRESS -->
+      <section class="card glass">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Progression</div>
+            <div class="section-name">Build EXE portable</div>
+          </div>
+          <div class="section-badge accent" id="progressBadge">EN ATTENTE</div>
+        </div>
+
+        <div class="steps" id="steps">
+          <div class="step" data-step="auth">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Authentification GitHub</span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="access">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Vérification du dépôt</span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="mainjs">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Injection <code>main.js</code></span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="package">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Injection <code>package.json</code></span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="workflow">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Injection workflow</span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="build">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Compilation</span>
+            <span class="step-time"></span>
+          </div>
+          <div class="step" data-step="ready">
+            <span class="led" data-state="idle"></span>
+            <span class="step-label">Exe prêt</span>
+            <span class="step-time"></span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="go" disabled>
+          <span>🚀</span>
+          <span>GÉNÉRER L'EXE PORTABLE</span>
+        </button>
+
+        <div class="log" id="log"></div>
+
+        <!-- SUCCESS PANEL -->
+        <div class="success-panel" id="successPanel">
+          <div class="check">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h3>Build terminé !</h3>
+          <p id="successMsg">Ton exe portable est prêt.</p>
+
+          <a class="download-link" id="downloadBtn" href="#" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4"/>
+            </svg>
+            <span>TÉLÉCHARGER L'EXE</span>
+          </a>
+
+          <div class="alt-links">
+            <a id="actionsLink" href="#" target="_blank" rel="noopener">Voir le workflow GitHub →</a>
+          </div>
+
+          <div class="info-help">
+            💡 Le fichier sera téléchargé en <code>.zip</code> — décompresse-le pour obtenir l'<code>.exe</code>.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============================================================ FOOTER ============================================================ -->
+    <footer class="footer">
+      <span class="dot"></span>
+      Electrocode · Laiche Brahim · Paris · 2026
+      <span class="dot"></span>
+    </footer>
+  </div>
+</div>
+
+<!-- ============================================================ SHEET INFO ============================================================ -->
+<div class="sheet-overlay" id="infoOverlay" onclick="closeSheet('info')"></div>
+<div class="sheet" id="infoSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-head-left">
+      <div class="sheet-icon">ⓘ</div>
+      <div>
+        <div class="sheet-sub">Guide</div>
+        <div class="sheet-title">À propos d'Electrocode</div>
+      </div>
+    </div>
+    <button class="sheet-close" onclick="closeSheet('info')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="info-list">
+      <div class="info-item">
+        <div class="info-item-icon">🔐</div>
+        <div class="info-item-body">
+          <div class="info-item-title">Token GitHub</div>
+          <div class="info-item-desc">Colle ton token PAT avec les scopes <b>repo</b> et <b>workflow</b>. Il est stocké uniquement dans ton navigateur.</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon">📦</div>
+        <div class="info-item-body">
+          <div class="info-item-title">Dépôt cible</div>
+          <div class="info-item-desc">Choisis un dépôt GitHub. Electrocode va y injecter <b>main.js</b>, <b>package.json</b> et un workflow GitHub Actions.</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon">⚡</div>
+        <div class="info-item-body">
+          <div class="info-item-title">Génération auto</div>
+          <div class="info-item-desc">Le workflow compile un <b>.exe portable</b> (Windows 32 bits) via Electron et electron-builder.</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon">⬇️</div>
+        <div class="info-item-body">
+          <div class="info-item-title">Téléchargement</div>
+          <div class="info-item-desc">Une fois le build terminé, un lien de téléchargement direct est généré via <b>nightly.link</b>.</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon">💡</div>
+        <div class="info-item-body">
+          <div class="info-item-title">Astuce</div>
+          <div class="info-item-desc">Le workflow se relance automatiquement à chaque <b>push</b> sur <code>main</code> ou <code>master</code>.</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-footer">Made by Brahim Laiche · 2026 · Paris</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================ UTILS ============================================================ */
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const byId = (id) => document.getElementById(id);
+
+const LS_KEYS = {
+  TOKEN: 'electrocode_token'
+};
+
+/* ============================================================ STORAGE ============================================================ */
+const store = (() => {
+  const mem = {};
+  let ls = null;
+  try { ls = window.localStorage; ls.setItem('__ec_test', '1'); ls.removeItem('__ec_test'); }
+  catch (e) { ls = null; }
+  return {
+    getItem(k) { try { if (ls) return ls.getItem(k); } catch (e) {} return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
+    setItem(k, v) { try { if (ls) { ls.setItem(k, v); return; } } catch (e) {} mem[k] = String(v); },
+    removeItem(k) { try { if (ls) ls.removeItem(k); } catch (e) {} delete mem[k]; }
+  };
+})();
+
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function fmtTime(date = new Date()) {
+  return date.toTimeString().slice(0, 8);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function haptic(ms){ ms = ms || 8; try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+/* ============================================================ SAVE INDICATOR ============================================================ */
+let saveIndicatorTimer = null;
+function showSaveIndicator(){
+  const ind = byId('saveIndicator');
+  if(!ind) return;
+  ind.classList.add('show');
+  clearTimeout(saveIndicatorTimer);
+  saveIndicatorTimer = setTimeout(()=>{ ind.classList.remove('show'); }, 800);
+}
+
+/* ============================================================ TOAST ============================================================ */
+let toastContainer = null;
+function notify(msg, type) {
+  type = type || 'info';
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    document.body.appendChild(toastContainer);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'internal-toast';
+  if (type === 'success') toast.classList.add('success-toast');
+  else if (type === 'danger') toast.classList.add('danger-toast');
+  else if (type === 'warning') toast.classList.add('warning-toast');
+  const icons = { success: '✓', danger: '⚠', warning: '⚡', info: '›' };
+  toast.innerHTML = '<span>' + (icons[type] || '›') + ' ' + escapeHtml(msg) + '</span>';
+  toastContainer.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px) scale(0.95)';
+    toast.style.transition = '.25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, 3200);
+}
+
+/* ============================================================ SHEET ============================================================ */
+function openSheet(name) {
+  byId(name + 'Overlay').classList.add('open');
+  byId(name + 'Sheet').classList.add('open');
+  haptic(6);
+}
+function closeSheet(name) {
+  byId(name + 'Overlay').classList.remove('open');
+  byId(name + 'Sheet').classList.remove('open');
+}
+['info'].forEach(function(name){
+  var sheet = byId(name + 'Sheet');
+  if (!sheet) return;
+  var startY = 0, currentY = 0, dragging = false;
+  sheet.addEventListener('touchstart', function(e){
+    if (e.target.closest('.sheet-body')) return;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    sheet.style.transition = 'none';
+  }, { passive: true });
+  sheet.addEventListener('touchmove', function(e){
+    if (!dragging) return;
+    currentY = e.touches[0].clientY - startY;
+    if (currentY > 0) sheet.style.transform = 'translateY(' + currentY + 'px)';
+  }, { passive: true });
+  sheet.addEventListener('touchend', function(){
+    if (!dragging) return;
+    dragging = false;
+    sheet.style.transition = '';
+    sheet.style.transform = '';
+    if (currentY > 100) closeSheet(name);
+    currentY = 0;
+  });
+});
+
+/* ============================================================ LOG ============================================================ */
+const logEl = $('log');
+function log(msg, cls = '') {
+  logEl.classList.add('show');
+  const line = document.createElement('div');
+  line.className = 'line';
+  line.innerHTML = '<span class="ts">[' + fmtTime() + ']</span><span class="msg ' + cls + '">' + msg + '</span>';
+  logEl.appendChild(line);
+  while (logEl.childNodes.length > 100) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ============================================================ STATUS BADGE ============================================================ */
+function setStatusBadge(text, type) {
+  var badge = byId('statusBadge');
+  var txt = byId('statusBadgeText');
+  badge.classList.remove('ready','loading','success','error');
+  if (type) badge.classList.add(type);
+  txt.textContent = text || 'PRÊT';
+
+  var pb = byId('progressBadge');
+  pb.textContent = text || 'EN ATTENTE';
+}
+
+/* ============================================================ LEDS / STEPS ============================================================ */
+function setStep(name, state, extra = '') {
+  const step = document.querySelector('.step[data-step="' + name + '"]');
+  if (!step) return;
+  step.classList.remove('done', 'running', 'error');
+  const led = step.querySelector('.led');
+  led.setAttribute('data-state', state);
+
+  if (state === 'running') {
+    step.classList.add('running');
+    step.querySelector('.step-time').innerHTML = '<span class="spinner"></span>';
+  } else if (state === 'done') {
+    step.classList.add('done');
+    step.querySelector('.step-time').textContent = fmtTime();
+  } else if (state === 'error') {
+    step.classList.add('error');
+    step.querySelector('.step-time').textContent = '✗';
+  } else {
+    step.querySelector('.step-time').textContent = '';
+  }
+
+  if (extra) {
+    step.querySelector('.step-label').innerHTML = extra;
+  }
+}
+
+function resetSteps() {
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.remove('done', 'running', 'error');
+    s.querySelector('.led').setAttribute('data-state', 'idle');
+    s.querySelector('.step-time').textContent = '';
+  });
+  document.querySelector('.step[data-step="access"] .step-label').textContent = 'Vérification du dépôt';
+  document.querySelector('.step[data-step="build"] .step-label').textContent = 'Compilation';
+
+  $('successPanel').classList.remove('show');
+  logEl.innerHTML = '';
+}
+
+/* ============================================================ GITHUB API ============================================================ */
+async function gh(method, path, token, body) {
+  const res = await fetch('https://api.github.com' + path, {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(body ? { 'Content-Type': 'application/json' } : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).message || ''; } catch (e) {}
+    throw new Error(res.status + ' ' + (detail || res.statusText));
+  }
+  return res.json();
+}
+
+/* ============================================================ STATE ============================================================ */
+let state = {
+  owner: null,
+  login: null,
+  repos: [],
+  token: null,
+  repo: null,
+  subfolder: null,
+  artifact: null,
+  run: null
+};
+
+/* ============================================================ TOKEN ACTIONS ============================================================ */
+function toggleTokenView(btn){
+  const input = byId('token');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+  haptic(6);
+}
+
+async function pasteToken(){
+  try {
+    const text = (await navigator.clipboard.readText()).trim();
+    if (!text) { notify('Presse-papier vide', 'danger'); return; }
+    byId('token').value = text;
+    store.setItem(LS_KEYS.TOKEN, text);
+    showSaveIndicator();
+    notify('Token collé', 'success');
+    log('📋 Token collé', 'info');
+    verifyToken();
+    haptic(10);
+  } catch(e) { notify('Presse-papiers refusé', 'danger'); }
+}
+
+function clearToken(){
+  if (!byId('token').value) return;
+  if (!confirm('Effacer le token sauvegardé ?')) return;
+  byId('token').value = '';
+  store.removeItem(LS_KEYS.TOKEN);
+  state.token = null;
+  state.owner = null;
+  state.login = null;
+  state.repos = [];
+  state.repo = null;
+  byId('userChip').style.display = 'none';
+  byId('repo').disabled = true;
+  byId('repo').value = '';
+  byId('repo').placeholder = 'Colle ton token pour charger tes dépôts…';
+  byId('go').disabled = true;
+  byId('repoBadge').textContent = 'AUCUN';
+  byId('subfolderHint').textContent = '—';
+  notify('Token effacé', 'warning');
+  log('🗑 Token effacé', 'warn');
+}
+
+/* ============================================================ VÉRIFICATION TOKEN ============================================================ */
+async function verifyToken() {
+  const token = $('token').value.trim();
+  const chip = $('userChip');
+  if (!token) {
+    chip.style.display = 'none';
+    $('repo').disabled = true;
+    $('go').disabled = true;
+    return;
+  }
+
+  store.setItem(LS_KEYS.TOKEN, token);
+  showSaveIndicator();
+
+  chip.style.display = 'inline-flex';
+  chip.classList.remove('error');
+  $('userName').textContent = 'Vérification…';
+  setStatusBadge('CHARGEMENT', 'loading');
+
+  try {
+    const user = await gh('GET', '/user', token);
+    state.token = token;
+    state.login = user.login;
+    state.owner = user.login;
+    $('userName').textContent = user.login;
+    log('Connecté en tant que <strong>' + user.login + '</strong>', 'ok');
+
+    await loadRepos();
+    $('repo').disabled = false;
+    $('repo').placeholder = 'Tape le début du nom du dépôt…';
+    checkReady();
+    setStatusBadge('OK', 'success');
+    notify('Connecté : ' + user.login, 'success');
+  } catch (e) {
+    chip.classList.add('error');
+    $('userName').textContent = 'Token invalide';
+    state.token = null;
+    state.owner = null;
+    $('repo').disabled = true;
+    $('go').disabled = true;
+    log('Token invalide : ' + e.message, 'err');
+    setStatusBadge('ERREUR', 'error');
+    notify('Token invalide', 'danger');
+  }
+}
+
+/* ============================================================ CHARGEMENT REPOS ============================================================ */
+async function loadRepos() {
+  const all = [];
+  let page = 1;
+  while (page <= 3) {
+    const batch = await gh('GET', '/user/repos?per_page=100&sort=updated&page=' + page, state.token);
+    if (!batch.length) break;
+    all.push(...batch);
+    if (batch.length < 100) break;
+    page++;
+  }
+  state.repos = all;
+  log(all.length + ' dépôts chargés', 'info');
+}
+
+/* ============================================================ AUTOCOMPLETE ============================================================ */
+const repoInput = $('repo');
+const listEl = $('autocompleteList');
+let activeIndex = -1;
+
+function highlightMatch(name, query) {
+  if (!query) return escapeHtml(name);
+  const idx = name.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return escapeHtml(name);
+  return escapeHtml(name.slice(0, idx))
+    + '<span class="match-hl">' + escapeHtml(name.slice(idx, idx + query.length)) + '</span>'
+    + escapeHtml(name.slice(idx + query.length));
+}
+
+repoInput.addEventListener('input', () => {
+  const query = repoInput.value.trim().toLowerCase();
+  activeIndex = -1;
+
+  if (!query) {
+    listEl.classList.remove('open');
+    listEl.innerHTML = '';
+    $('go').disabled = true;
+    state.repo = null;
+    $('repoBadge').textContent = 'AUCUN';
+    $('subfolderHint').textContent = '—';
+    return;
+  }
+
+  const matches = state.repos.filter(r =>
+    r.name.toLowerCase().includes(query) ||
+    (r.full_name && r.full_name.toLowerCase().includes(query))
+  ).slice(0, 30);
+
+  if (!matches.length) {
+    listEl.innerHTML = '<div class="repo-dropdown-empty">Aucun dépôt trouvé</div>';
+    listEl.classList.add('open');
+    return;
+  }
+
+  listEl.innerHTML = matches.map((r, i) => {
+    const isPrivate = r.private;
+    const badge = isPrivate
+      ? '<span class="repo-option-badge private">🔒 PRIVÉ</span>'
+      : '<span class="repo-option-badge">PUBLIC</span>';
+    const icon = isPrivate
+      ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+    return (
+      '<div class="repo-option" data-index="' + i + '" data-name="' + escapeHtml(r.name) + '">' +
+        '<div class="repo-option-name">' + icon + '<span>' + highlightMatch(r.name, query) + '</span></div>' +
+        badge +
+      '</div>'
+    );
+  }).join('');
+  listEl.classList.add('open');
+
+  listEl.querySelectorAll('.repo-option').forEach(item => {
+    item.addEventListener('click', () => selectRepo(item.dataset.name));
+  });
+});
+
+repoInput.addEventListener('keydown', (e) => {
+  const items = listEl.querySelectorAll('.repo-option');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeIndex = Math.min(activeIndex + 1, items.length - 1);
+    updateActive(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeIndex = Math.max(activeIndex - 1, 0);
+    updateActive(items);
+  } else if (e.key === 'Enter' && activeIndex >= 0) {
+    e.preventDefault();
+    items[activeIndex].click();
+  } else if (e.key === 'Escape') {
+    listEl.classList.remove('open');
+  }
+});
+
+function updateActive(items) {
+  items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+  if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+}
+
+function selectRepo(name) {
+  repoInput.value = name;
+  listEl.classList.remove('open');
+  state.repo = name;
+  state.subfolder = name + 'exe';
+  $('subfolderHint').textContent = state.subfolder;
+  $('repoBadge').textContent = name.toUpperCase();
+  checkReady();
+  haptic(8);
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.repo-wrap')) listEl.classList.remove('open');
+});
+
+function checkReady() {
+  $('go').disabled = !(state.token && state.owner && state.repo && state.subfolder);
+}
+
+/* ============================================================ TEMPLATES ============================================================ */
+function tplMainJs(subfolder) {
+  return [
+    '// ============================================================',
+    '// Electrocode — Electron main process (auto-généré)',
+    '// ============================================================',
+    "const path = require('path');",
+    "const fs = require('fs');",
+    "const { app, BrowserWindow, Menu, session } = require('electron');",
+    '',
+    "app.commandLine.appendSwitch('disable-features', 'ServiceWorker');",
+    '',
+    'let baseDir;',
+    'if (process.env.PORTABLE_EXECUTABLE_DIR) {',
+    '  baseDir = process.env.PORTABLE_EXECUTABLE_DIR;',
+    '} else if (process.env.PORTABLE_EXECUTABLE_FILE) {',
+    '  baseDir = path.dirname(process.env.PORTABLE_EXECUTABLE_FILE);',
+    '} else if (app.isPackaged) {',
+    "  baseDir = path.dirname(app.getPath('exe'));",
+    '} else {',
+    '  baseDir = __dirname;',
+    '}',
+    '',
+    "const dataDir = path.join(baseDir, 'data');",
+    'try { fs.mkdirSync(dataDir, { recursive: true }); } catch (e) {}',
+    '',
+    "app.setPath('userData', dataDir);",
+    "app.setPath('sessionData', dataDir);",
+    "app.setPath('cache', path.join(dataDir, 'cache'));",
+    "app.setPath('logs', path.join(dataDir, 'logs'));",
+    '',
+    'function hardClean() {',
+    "  const folders = ['Service Worker', 'Cache', 'Code Cache', 'GPUCache',",
+    "                   'Cache Storage', 'Session Storage', 'blob_storage'];",
+    '  folders.forEach(name => {',
+    '    const p = path.join(dataDir, name);',
+    '    try { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true }); } catch (e) {}',
+    '  });',
+    '}',
+    '',
+    'let mainWindow;',
+    '',
+    'function createWindow() {',
+    '  mainWindow = new BrowserWindow({',
+    '    width: 1100, height: 800, minWidth: 400, minHeight: 500,',
+    "    title: 'Electrocode',",
+    "    icon: path.join(__dirname, '" + subfolder + "', 'icon.png'),",
+    '    autoHideMenuBar: true,',
+    "    backgroundColor: '#f1f5f9',",
+    '    webPreferences: { contextIsolation: true, nodeIntegration: false }',
+    '  });',
+    '',
+    "  mainWindow.loadFile(path.join(__dirname, '" + subfolder + "', 'index.html'));",
+    "  mainWindow.on('closed', () => { mainWindow = null; });",
+    '}',
+    '',
+    'function buildMenu() {',
+    '  const template = [',
+    "    { label: 'Fichier', submenu: [",
+    "      { role: 'reload', label: 'Recharger' },",
+    "      { type: 'separator' },",
+    "      { role: 'quit', label: 'Quitter' }",
+    '    ]},',
+    "    { label: 'Édition', submenu: [",
+    "      { role: 'undo', label: 'Annuler' },",
+    "      { role: 'redo', label: 'Rétablir' },",
+    "      { type: 'separator' },",
+    "      { role: 'cut', label: 'Couper' },",
+    "      { role: 'copy', label: 'Copier' },",
+    "      { role: 'paste', label: 'Coller' },",
+    "      { role: 'selectAll', label: 'Tout sélectionner' }",
+    '    ]},',
+    "    { label: 'Affichage', submenu: [",
+    "      { role: 'zoomIn', label: 'Zoom +' },",
+    "      { role: 'zoomOut', label: 'Zoom −' },",
+    "      { role: 'resetZoom', label: 'Zoom normal' },",
+    "      { type: 'separator' },",
+    "      { role: 'togglefullscreen', label: 'Plein écran' },",
+    "      { role: 'toggleDevTools', label: 'Outils de développement' }",
+    '    ]}',
+    '  ];',
+    '  Menu.setApplicationMenu(Menu.buildFromTemplate(template));',
+    '}',
+    '',
+    'app.whenReady().then(async () => {',
+    '  hardClean();',
+    '  try {',
+    '    await session.defaultSession.clearStorageData({',
+    "      storages: ['serviceworkers', 'cachestorage', 'cookies', 'shadercache']",
+    '    });',
+    '  } catch (e) {}',
+    '  buildMenu();',
+    '  createWindow();',
+    "  app.on('activate', () => {",
+    '    if (BrowserWindow.getAllWindows().length === 0) createWindow();',
+    '  });',
+    '});',
+    '',
+    "app.on('window-all-closed', () => {",
+    "  if (process.platform !== 'darwin') app.quit();",
+    '});'
+  ].join('\n');
+}
+
+function tplPackageJson(subfolder, repoName) {
+  return JSON.stringify({
+    name: repoName.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+    version: '1.0.0',
+    description: 'Electrocode',
+    main: 'main.js',
+    author: 'Laiche Brahim',
+    license: 'MIT',
+    private: true,
+    scripts: {
+      start: 'electron .',
+      build: 'electron-builder --win portable --ia32'
+    },
+    devDependencies: {
+      electron: '^33.0.0',
+      'electron-builder': '^25.1.8'
+    },
+    build: {
+      appId: 'com.laichebrahim.electrocode',
+      productName: 'Electrocode',
+      directories: { output: 'dist' },
+      files: ['main.js', subfolder + '/**/*'],
+      win: {
+        target: [{ target: 'portable', arch: ['ia32'] }],
+        artifactName: repoName + '-${version}-portable.${ext}'
+      },
+      portable: { requestExecutionLevel: 'user' },
+      compression: 'maximum',
+      asar: true
+    }
+  }, null, 2);
+}
+
+function tplWorkflow() {
+  return [
+    'name: Build EXE',
+    '',
+    'on:',
+    '  push:',
+    '    branches: [main, master]',
+    '  workflow_dispatch:',
+    '',
+    'jobs:',
+    '  build:',
+    '    runs-on: windows-latest',
+    '    steps:',
+    '      - name: Checkout',
+    '        uses: actions/checkout@v4',
+    '',
+    '      - name: Setup Node.js',
+    '        uses: actions/setup-node@v4',
+    '        with:',
+    "          node-version: '20'",
+    '',
+    '      - name: Install dependencies',
+    '        run: npm install',
+    '',
+    '      - name: Build portable EXE',
+    '        run: npm run build',
+    '',
+    '      - name: Upload artifact',
+    '        uses: actions/upload-artifact@v4',
+    '        with:',
+    '          name: Electrocode-portable',
+    '          path: dist/*.exe',
+    '          retention-days: 30'
+  ].join('\n');
+}
+
+/* ============================================================ PUSH FILE ============================================================ */
+async function upsertFile(path, content, message) {
+  let sha = null;
+  try {
+    const existing = await gh('GET', '/repos/' + state.owner + '/' + state.repo + '/contents/' + path, state.token);
+    sha = existing.sha;
+  } catch (e) {}
+  const body = { message: message, content: toBase64(content) };
+  if (sha) body.sha = sha;
+  return gh('PUT', '/repos/' + state.owner + '/' + state.repo + '/contents/' + path, state.token, body);
+}
+
+/* ============================================================ WAIT WORKFLOW ============================================================ */
+async function waitForWorkflow(pushTimeMs) {
+  let run = null;
+  for (let i = 0; i < 40; i++) {
+    await sleep(3000);
+    const data = await gh('GET', '/repos/' + state.owner + '/' + state.repo + '/actions/runs?per_page=10', state.token);
+    run = data.workflow_runs.find(r =>
+      new Date(r.created_at).getTime() >= pushTimeMs - 15000
+    );
+    if (run) break;
+  }
+  if (!run) throw new Error('Workflow non détecté après 2 minutes');
+
+  log('Workflow lancé : <a href="' + run.html_url + '" target="_blank">#' + run.run_number + '</a>', 'info');
+
+  let lastStatus = '';
+  const startedAt = Date.now();
+  const maxWait = 20 * 60 * 1000;
+
+  while (Date.now() - startedAt < maxWait) {
+    const r = await gh('GET', '/repos/' + state.owner + '/' + state.repo + '/actions/runs/' + run.id, state.token);
+
+    if (r.status !== lastStatus) {
+      lastStatus = r.status;
+      const labels = {
+        queued: '⏳ File d\'attente',
+        in_progress: '⚙️ Compilation…',
+        completed: r.conclusion === 'success' ? '✅ Terminé' : '❌ Échec'
+      };
+      setStep('build', 'running', 'Compilation <span style="color:#fca5a5;font-size:7px;">' + (labels[r.status] || r.status) + '</span>');
+    }
+
+    if (r.status === 'completed') {
+      if (r.conclusion !== 'success') {
+        throw new Error('Build ' + r.conclusion);
+      }
+      const arts = await gh('GET', '/repos/' + state.owner + '/' + state.repo + '/actions/runs/' + run.id + '/artifacts', state.token);
+      if (!arts.artifacts.length) throw new Error('Aucun artefact généré');
+      return { run: r, artifact: arts.artifacts[0] };
+    }
+
+    await sleep(8000);
+  }
+  throw new Error('Timeout : build > 20 min');
+}
+
+/* ============================================================ ORCHESTRATION ============================================================ */
+$('go').addEventListener('click', async () => {
+  const btn = $('go');
+  btn.disabled = true;
+  resetSteps();
+  setStatusBadge('BUILD...', 'loading');
+  haptic(12);
+
+  const t0 = Date.now();
+
+  try {
+    setStep('auth', 'running');
+    await sleep(200);
+    setStep('auth', 'done');
+    log('Authentifié : <strong>' + state.owner + '</strong>', 'ok');
+
+    setStep('access', 'running');
+    await gh('GET', '/repos/' + state.owner + '/' + state.repo, state.token);
+    setStep('access', 'done');
+    log('Accès à <strong>' + state.repo + '</strong> confirmé', 'ok');
+
+    setStep('mainjs', 'running');
+    await upsertFile('main.js', tplMainJs(state.subfolder), 'Add Electron main.js (auto-généré)');
+    setStep('mainjs', 'done');
+    log('Fichier <code>main.js</code> poussé', 'ok');
+
+    setStep('package', 'running');
+    await upsertFile('package.json', tplPackageJson(state.subfolder, state.repo), 'Add package.json (auto-généré)');
+    setStep('package', 'done');
+    log('Fichier <code>package.json</code> poussé', 'ok');
+
+    setStep('workflow', 'running');
+    await upsertFile('.github/workflows/build.yml', tplWorkflow(), 'Add GitHub Actions workflow');
+    setStep('workflow', 'done');
+    log('Workflow poussé', 'ok');
+
+    log('⏱️ Attente de la compilation…', 'info');
+    const pushTimeMs = Date.now();
+
+    setStep('build', 'running', 'Compilation <span style="color:#fca5a5;font-size:7px;">⏳ Démarrage…</span>');
+    const { run, artifact } = await waitForWorkflow(pushTimeMs);
+    setStep('build', 'done');
+    log('Build terminé en ' + Math.round((Date.now() - t0) / 1000) + 's', 'ok');
+
+    state.artifact = artifact;
+    state.run = run;
+
+    setStep('ready', 'running');
+
+    const nightlyUrl = 'https://nightly.link/' + state.owner + '/' + state.repo + '/actions/runs/' + run.id + '/' + artifact.name + '.zip';
+
+    $('actionsLink').href = run.html_url;
+    $('downloadBtn').href = nightlyUrl;
+
+    $('successMsg').innerHTML =
+      '<strong>' + escapeHtml(artifact.name) + '</strong><br><span style="font-size:8px;opacity:0.8;">' + (artifact.size_in_bytes / 1024 / 1024).toFixed(1) + ' Mo</span>';
+
+    setTimeout(() => {
+      setStep('ready', 'done');
+      $('successPanel').classList.add('show');
+      $('successPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      log('✅ Exe prêt à télécharger !', 'ok');
+      setStatusBadge('SUCCÈS', 'success');
+      notify('Exe prêt !', 'success');
+    }, 400);
+
+  } catch (e) {
+    log('❌ Erreur : ' + e.message, 'err');
+    document.querySelectorAll('.step.running').forEach(s => {
+      s.classList.remove('running');
+      s.classList.add('error');
+      s.querySelector('.led').setAttribute('data-state', 'error');
+      s.querySelector('.step-time').textContent = '✗';
+    });
+    setStatusBadge('ÉCHEC', 'error');
+    notify('Erreur : ' + e.message, 'danger');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============================================================ DÉCLENCHEURS ============================================================ */
+$('token').addEventListener('change', verifyToken);
+$('token').addEventListener('blur', () => {
+  if ($('token').value.trim().length > 20) verifyToken();
+});
+$('token').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    $('token').blur();
+    verifyToken();
+  }
+});
+
+/* ============================================================ INIT ============================================================ */
+(function init(){
+  const saved = store.getItem(LS_KEYS.TOKEN);
+  if (saved) {
+    byId('token').value = saved;
+    setTimeout(verifyToken, 300);
+  }
+  setStatusBadge('PRÊT', 'ready');
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').catch(function() {});
+    });
+  }
+})();
+
+/* ============================================================ ESCAPE ============================================================ */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeSheet('info');
+});
+
+/* ============================================================ GLOBAL EXPOSE ============================================================ */
+window.openSheet = openSheet;
+window.closeSheet = closeSheet;
+window.toggleTokenView = toggleTokenView;
+window.pasteToken = pasteToken;
+window.clearToken = clearToken;
+window.verifyToken = verifyToken;
+</script>
+</body>
+</html>
